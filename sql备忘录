@@ -1,0 +1,102 @@
+一、SQL数据查看流程（不区分大小写）
+SHOW DATABASES; --查看已有的数据库
+USE database1； --使用数据库database1
+SHOW tables; --查看database1 中的表
+SHOW CREATE TABLE table1; --查看表table1中的字段及数据类型
+/*
+查看数据类型其他方法：
+DES 表；
+DESCRIBE 表；
+SHOW COLUMNS FROM 表；
+*/
+
+二、新建table流程（包含约束和键）
+例：
+CREATE TABLE products(
+product_no integer,
+product_nonew integer UNIQUE, --唯一性约束
+city varchar(255) DEFAULT 'Sandnes',--缺省值
+name text NOT NULL, --非空约束
+price numeric NOT NULL check(price > 0) , --约束条件可以叠加使用
+price_new check(price_new > 0) --CHECK约束
+PRIMARY KEY(product_no) --主键
+CONSTRAINT chk_products CHECK (Id_P>0 AND city='Sandnes')
+);
+
+CREATE TABLE orders (
+order_id PRIMARY KEY, --主键另一种表达方式
+product_no integer REFERENCES products(product_no), --外键匹配另一个表的主键
+quantity integer
+);
+
+三、SQL插入行/列(新增数据）
+--1.新增行
+INSERT INTO 表(列1，列2,...)
+VALUES(值1,值2,...)
+或者
+INSERT INTO 表(列1，列2,...)
+SELECT 另一个表(列1，列2,...) FROM 另一个表
+/*
+对比select into from
+insert into select from 要求目标表存在
+select into from 要求目标表不存在，因为在插入时会自动创建
+例：
+SELECT * INTO CustCopy From Customers;
+*/
+更新数据部分（操作无法撤销，慎用）
+例：
+UPDATE Customers SET cust_email = 'searchor@163.com' WHERE cust_id = '100006' --使用列值限定固定行进行修改删除操作
+DELETE FROM Customers WHERE cust_id = '100006'
+
+--2.新增列
+ALTER TABLE Table_name ADD Column_name datatype --增加列
+ALTER TABLE Table_name DROP Column_name --删除列
+/* DROP TABLE Table_name --删除表 */
+ALTER COLUMN Column_name datatype --修改列类型
+
+四、SQL基础操作框架(注意操作顺序）
+SELECT 列
+FROM 表
+INNER/LEFT/RIGHT/FULL JOIN 表 --表之间联结
+WHERE 限定条件 --或者是表之间联结的规则
+GROUP BY 列 --以某列进行分组（通常会在伴随sum（）、avg（）等函数同时使用）
+HAVING 限定条件
+ORDER BY 列 --以某列排序（DESC顺序，ASC）
+/*
+HAVING函数补充说明：HAVING出现原因，WHERE关键词无法和合计函数使用
+例：
+SELECT Customer,SUM(OrderPrice) FROM Orders
+WHERE Customer = 'Bush' OR Customer = 'Adams'
+GROUP BY Customer
+HAVING SUM(OrderPrice) > 1500
+*/
+
+五、常用的几个函数
+1.COALESCE函数（COALESCE函数可以替代CASE语句，而且比CASE要方便得多）
+COALESCE格式：COALESCE (expression_1, expression_2, ...,expression_n)
+例：COALESCE(T.Branch_Id,'99')AS Branch_Id_New
+
+2.CASE函数（简单条件判断）
+例：
+CASE sex
+    WHEN '1' THEN '男'
+    WHEN '2' THEN '女'
+ELSE '其他' END
+
+3.SUBSTR函数
+SUBSTR(str,pos,len); 
+对于字符str，从pos开始的位置，截取len个字符(空白也算字符)。 
+
+4.UNION函数
+SELECT column_name(s) FROM table_name1
+UNION(或者UNION ALL)
+SELECT column_name(s) FROM table_name2
+--默认地，UNION 操作符选取不同的值。如果允许重复的值，请使用 UNION ALL。
+
+5.CAST函数
+CAST ( expression AS data_type )；  --用AS关键字分隔的源值和目标数据类型
+例：SELECT CAST('12.5' AS decimal(9,2))
+
+6.DATE_FORMAT函数
+比如要实现DATE中时分秒去掉
+SELECT DATE_FORMAT(now(),'%Y-%m-%d');
